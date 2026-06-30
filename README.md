@@ -80,9 +80,9 @@ The service enforces a clean separation of concerns and uses a **concrete depend
 
 Once the application is running, the following endpoints are available:
 
-* **Get All Exam Notifications (`GET /notifications`)**:
-  - Fetches the collection of exam notifications from the PostgreSQL database.
-  - Automatically runs GORM auto-migrations and seeds the default BPSSC Company Commander 2026 notification if the table is empty.
+* **Parse Exam Notification PDF (`POST /parse`)**:
+  - Accepts a PDF file upload under the multipart form field name `file`.
+  - Dynamically extracts plain text, parses details (dates, eligibility criteria, required documents, fees) using heuristics, saves it into the database, and returns the parsed GORM entity JSON payload.
 * **Health Check (`GET /health`)**:
   - Returns `{"status": "healthy"}` for container/service health diagnostics.
 

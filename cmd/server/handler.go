@@ -18,7 +18,7 @@ func registerHandlers(e *echo.Echo, db *gorm.DB) {
 	controller := controllers.NewExamNotificationController(service)
 
 	// Register Routes
-	e.GET("/notifications", controller.GetNotifications)
+	e.POST("/parse", controller.Parse)
 	e.GET("/health", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
 			"status": "healthy",

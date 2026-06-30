@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/examsync/pdf-parser/internal/models"
 	"github.com/examsync/pdf-parser/internal/repositories"
+	"github.com/examsync/pdf-parser/utils/pdf"
 )
 
 // ExamNotificationService handles business logic operations for exam notifications.
@@ -15,7 +16,18 @@ func NewExamNotificationService(repo *repositories.ExamNotificationRepository) *
 	return &ExamNotificationService{repo: repo}
 }
 
-// GetNotifications retrieves exam notifications from the data repository.
-func (s *ExamNotificationService) GetNotifications() ([]models.ExamNotification, error) {
-	return s.repo.GetAll()
+// ParsePDF parses notification data from raw PDF bytes, saves it to the database, and returns it.
+func (s *ExamNotificationService) ParsePDF(fileBytes []byte) (*models.ExamNotification, error) {
+	text, err := pdf.ExtractText(fileBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	notification := pdf.ParseNotification(text)
+
+	if err := s.repo.Create(notification); err != nil {
+		return nil, err
+	}
+
+	return notification, nil
 }
