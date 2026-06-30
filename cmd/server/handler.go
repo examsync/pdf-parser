@@ -13,12 +13,12 @@ import (
 // registerHandlers instantiates the MVC layers and configures routing endpoints on Echo
 func registerHandlers(e *echo.Echo, db *gorm.DB) {
 	// Wire Layers (Tightly Coupled Concrete Structs injection)
-	repo := repositories.NewParsedPDFRepository(db)
-	service := services.NewParsedPDFService(repo)
-	controller := controllers.NewParsedPDFController(service)
+	repo := repositories.NewExamNotificationRepository(db)
+	service := services.NewExamNotificationService(repo)
+	controller := controllers.NewExamNotificationController(service)
 
 	// Register Routes
-	e.GET("/pdfs", controller.GetPDFs)
+	e.GET("/notifications", controller.GetNotifications)
 	e.GET("/health", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
 			"status": "healthy",

@@ -7,23 +7,23 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-// ParsedPDFController handles HTTP requests for parsed PDFs.
-type ParsedPDFController struct {
-	service *services.ParsedPDFService
+// ExamNotificationController handles HTTP requests for exam notifications.
+type ExamNotificationController struct {
+	service *services.ExamNotificationService
 }
 
-// NewParsedPDFController creates a new instance of ParsedPDFController.
-func NewParsedPDFController(service *services.ParsedPDFService) *ParsedPDFController {
-	return &ParsedPDFController{service: service}
+// NewExamNotificationController creates a new instance of ExamNotificationController.
+func NewExamNotificationController(service *services.ExamNotificationService) *ExamNotificationController {
+	return &ExamNotificationController{service: service}
 }
 
-// GetPDFs handles the HTTP request to get all parsed PDFs.
-func (c *ParsedPDFController) GetPDFs(ctx *echo.Context) error {
-	pdfs, err := c.service.GetPDFs()
+// GetNotifications handles the HTTP request to get all exam notifications.
+func (c *ExamNotificationController) GetNotifications(ctx *echo.Context) error {
+	notifications, err := c.service.GetNotifications()
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
 		})
 	}
-	return ctx.JSON(http.StatusOK, pdfs)
+	return ctx.JSON(http.StatusOK, notifications)
 }

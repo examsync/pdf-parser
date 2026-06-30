@@ -68,7 +68,7 @@ The service enforces a clean separation of concerns and uses a **concrete depend
 2. **DTO Layer (`internal/DTOS/`)**:
    - Serialization templates that define payloads for request/response bodies.
 3. **Domain Layer (`internal/models/`)**:
-   - Domain structures representing core entities mapped to database schemas (e.g. `ParsedPDF` database entity).
+   - Domain structures representing core entities mapped to database schemas (e.g. `ExamNotification` database entity).
 4. **Service Layer (`internal/services/`)**:
    - Implements core business logic workflows and coordination rules.
 5. **Infrastructure & Storage (`internal/repositories/` / `utils/database/`)**:
@@ -80,9 +80,9 @@ The service enforces a clean separation of concerns and uses a **concrete depend
 
 Once the application is running, the following endpoints are available:
 
-* **Get All Parsed PDFs (`GET /pdfs`)**:
-  - Fetches the collection of parsed PDFs from the PostgreSQL database.
-  - Automatically runs GORM auto-migrations and seeds a default baseline record (`gobyexample.pdf`) if the table is empty.
+* **Get All Exam Notifications (`GET /notifications`)**:
+  - Fetches the collection of exam notifications from the PostgreSQL database.
+  - Automatically runs GORM auto-migrations and seeds the default BPSSC Company Commander 2026 notification if the table is empty.
 * **Health Check (`GET /health`)**:
   - Returns `{"status": "healthy"}` for container/service health diagnostics.
 
@@ -111,7 +111,7 @@ Once the application is running, the following endpoints are available:
      port: 5432
      user: postgres
      password: postgres
-     dbname: pdf_parser
+     dbname: examsync
      sslmode: disable
    ```
 

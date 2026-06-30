@@ -5,17 +5,17 @@ import (
 	"github.com/examsync/pdf-parser/internal/repositories"
 )
 
-// ParsedPDFService handles business logic operations for parsed PDFs.
-type ParsedPDFService struct {
-	repo *repositories.ParsedPDFRepository
+// ExamNotificationService handles business logic operations for exam notifications.
+type ExamNotificationService struct {
+	repo *repositories.ExamNotificationRepository
 }
 
-// NewParsedPDFService creates a new instance of ParsedPDFService.
-func NewParsedPDFService(repo *repositories.ParsedPDFRepository) *ParsedPDFService {
-	return &ParsedPDFService{repo: repo}
+// NewExamNotificationService creates a new instance of ExamNotificationService.
+func NewExamNotificationService(repo *repositories.ExamNotificationRepository) *ExamNotificationService {
+	return &ExamNotificationService{repo: repo}
 }
 
-// GetPDFs retrieves parsed PDFs from the data repository.
-func (s *ParsedPDFService) GetPDFs() ([]models.ParsedPDF, error) {
+// GetNotifications retrieves exam notifications from the data repository.
+func (s *ExamNotificationService) GetNotifications() ([]models.ExamNotification, error) {
 	return s.repo.GetAll()
 }
