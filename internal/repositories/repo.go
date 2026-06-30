@@ -15,21 +15,13 @@ func NewExamNotificationRepository(db *gorm.DB) *ExamNotificationRepository {
 	return &ExamNotificationRepository{db: db}
 }
 
-// Create inserts a new ExamNotification record into the database, running auto-migration first.
+// Create inserts a new ExamNotification record into the database.
 func (r *ExamNotificationRepository) Create(notification *models.ExamNotification) error {
-	if err := r.db.AutoMigrate(&models.ExamNotification{}); err != nil {
-		return err
-	}
 	return r.db.Create(notification).Error
 }
 
-// GetAll retrieves all ExamNotification records, performing migration if necessary.
+// GetAll retrieves all ExamNotification records from the database.
 func (r *ExamNotificationRepository) GetAll() ([]models.ExamNotification, error) {
-	// Auto migrate schema if not exists
-	if err := r.db.AutoMigrate(&models.ExamNotification{}); err != nil {
-		return nil, err
-	}
-
 	var notifications []models.ExamNotification
 	if err := r.db.Find(&notifications).Error; err != nil {
 		return nil, err
