@@ -17,13 +17,13 @@ func NewExamNotificationService(repo *repositories.ExamNotificationRepository) *
 }
 
 // ParsePDF parses notification data from raw PDF bytes, saves it to the database, and returns it.
-func (s *ExamNotificationService) ParsePDF(fileBytes []byte) (*models.ExamNotification, error) {
+func (s *ExamNotificationService) ParsePDF(fileName string, fileBytes []byte) (*models.ExamNotification, error) {
 	text, err := pdf.ExtractText(fileBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	notification := pdf.ParseNotification(text)
+	notification := pdf.ParseNotification(fileName, text)
 
 	if err := s.repo.Create(notification); err != nil {
 		return nil, err

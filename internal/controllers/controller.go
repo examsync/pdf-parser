@@ -42,7 +42,7 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 		})
 	}
 
-	notification, err := c.service.ParsePDF(fileBytes)
+	notification, err := c.service.ParsePDF(file.Filename, fileBytes)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, map[string]string{
 			"error": "Failed to parse PDF: " + err.Error(),
