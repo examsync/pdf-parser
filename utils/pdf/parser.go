@@ -16,17 +16,21 @@ func ExtractText(fileBytes []byte) (string, error) {
 		return "", err
 	}
 
-	b, err := reader.GetPlainText()
-	if err != nil {
-		return "", err
+	var textBuilder strings.Builder
+	totalPage := reader.NumPage()
+	for pageIndex := 1; pageIndex <= totalPage; pageIndex++ {
+		p := reader.Page(pageIndex)
+		if p.V.IsNull() {
+			continue
+		}
+		texts := p.Content().Text
+		for _, txt := range texts {
+			textBuilder.WriteString(txt.S)
+		}
+		textBuilder.WriteByte('\n')
 	}
 
-	var buf bytes.Buffer
-	if _, err := buf.ReadFrom(b); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
+	return textBuilder.String(), nil
 }
 
 // ParseNotification processes the extracted text dynamically and structures it into an ExamNotification GORM model.
@@ -46,10 +50,10 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 	dateRegex := regexp.MustCompile(`\d{2}[/@.-]\d{2}[/@.-]\d{4}`)
 
 	// Category Keywords (Low-case for easier matching)
-	dateKeywords := []string{"frfFk", "date", "fnukad", "cutoff", "cut-off", "last", "start", "time"}
-	eligibilityKeywords := []string{"eligibility", "qualification", "criteria", "Lukrd", "graduate", "Lukr", "mez", "lhek", "height", "chest", "weight", "ÅWapkbZ", "lhuk", "ot+u", "physical", "vgZrk", "ik=rk", "age"}
-	documentKeywords := []string{"document", "certificate", "marksheet", "photo", "signature", "izek.k&i=", "passport", "aadhar", "pan card", "email", "mobile", "iathdj.k", "gLrk{kj", "QksVks"}
-	feeKeywords := []string{"fee", "शुल्क", "charges", "'kqYd", "ewY;", "pktZ", "/-", "@&", "amount", "payment", "transaction"}
+	dateKeywords := []string{"frffk", "date", "fnukad", "cutoff", "cut-off", "last", "start", "time"}
+	eligibilityKeywords := []string{"eligibility", "qualification", "criteria", "lukrd", "graduate", "lukr", "mez", "lhek", "height", "chest", "weight", "åwapkbz", "lhuk", "ot+u", "physical", "vgzrk", "ik=rk", "age"}
+	documentKeywords := []string{"document", "certificate", "marksheet", "photo", "signature", "izek.k&i=", "passport", "aadhar", "pan card", "email", "mobile", "iathdj.k", "glrk{kj", "qksvks"}
+	feeKeywords := []string{"fee", "शुल्क", "charges", "'kqyd", "ewy;", "pktz", "/-", "@&", "amount", "payment", "transaction"}
 
 	seenDates := make(map[string]bool)
 	seenEligibilities := make(map[string]bool)
@@ -73,7 +77,7 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 				}
 			}
 		}
-		if isDateLine && len(trimmed) < 150 {
+		if isDateLine {
 			if !seenDates[trimmed] {
 				dateLines = append(dateLines, trimmed)
 				seenDates[trimmed] = true
@@ -88,7 +92,7 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 				break
 			}
 		}
-		if isEligibility && len(trimmed) < 200 {
+		if isEligibility {
 			if !seenEligibilities[trimmed] {
 				eligibilityLines = append(eligibilityLines, trimmed)
 				seenEligibilities[trimmed] = true
@@ -103,7 +107,7 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 				break
 			}
 		}
-		if isDoc && len(trimmed) < 200 {
+		if isDoc {
 			if !seenDocs[trimmed] {
 				documentLines = append(documentLines, trimmed)
 				seenDocs[trimmed] = true
@@ -118,7 +122,7 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 				break
 			}
 		}
-		if isFee && len(trimmed) < 200 {
+		if isFee {
 			if !seenFees[trimmed] {
 				feeLines = append(feeLines, trimmed)
 				seenFees[trimmed] = true
