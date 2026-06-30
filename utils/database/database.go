@@ -29,6 +29,10 @@ func ConnectDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
+	if err := db.AutoMigrate(); err != nil {
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
+	}
+
 	return db, nil
 }
 

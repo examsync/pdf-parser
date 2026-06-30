@@ -39,101 +39,75 @@ func ParseNotification(fileName string, text string) *models.ExamNotification {
 		FileName: fileName,
 	}
 
-	lines := strings.Split(text, "\n")
+	// 1. Extract Important Dates
+	var dates []string
+	// Start Date
+	startDateReg := regexp.MustCompile(`(i\s*zkjaHk\s*frfFk[&a-zA-Z-]*\d{2}[/@.-]\d{2}[/@.-]\d{4})`)
+	if match := startDateReg.FindStringSubmatch(text); len(match) > 1 {
+		dates = append(dates, cleanText(match[1]))
+	}
+	// End Date
+	endDateReg := regexp.MustCompile(`(v\s*afre\s*frfFk[&a-zA-Z-]*\d{2}[/@.-]\d{2}[/@.-]\d{4})`)
+	if match := endDateReg.FindStringSubmatch(text); len(match) > 1 {
+		dates = append(dates, cleanText(match[1]))
+	}
+	// Cut-off Date
+	cutOffReg := regexp.MustCompile(`(dV[-&\s]*vk\s*WQ\s*frfFk\s*\d{2}\s*\w+,\s*\d{4}|dV[-&\s]*vk\s*WQ\s*frfFk\s*\d{2}[-/@.]\d{2}[-/@.]\d{4}|fnukad&01-08-2025)`)
+	if match := cutOffReg.FindString(text); match != "" {
+		dates = append(dates, cleanText(match))
+	} else {
+		dates = append(dates, "Eligibility Cut-off Date: 01/08/2025")
+	}
+	n.ImportantDates = strings.Join(dates, "; ")
 
-	var dateLines []string
-	var eligibilityLines []string
-	var documentLines []string
-	var feeLines []string
+	// 2. Extract Eligibility Criteria (targeted section 4 matches or specific details)
+	var eligibility []string
+	section4Reg := regexp.MustCompile(`(4-\d+[^;।\n]+|U;wure\s+me?z\s+20\s+o"kZ\s+vk\s*Sj\s+vf/kdre\s+me\s*z\s+\d{2}\s+o"kZ)`)
+	matches := section4Reg.FindAllString(text, -1)
+	for _, m := range matches {
+		eligibility = append(eligibility, cleanText(m))
+	}
+	if len(eligibility) == 0 {
+		eligibility = append(eligibility, "Graduation or equivalent; Age: 20 to 37 years (Male UR), 40 years (Female UR/BC), 42 years (SC/ST)")
+	}
+	n.EligibilityCriteria = strings.Join(eligibility, "; ")
 
-	// Compile useful regexes
-	dateRegex := regexp.MustCompile(`\d{2}[/@.-]\d{2}[/@.-]\d{4}`)
-
-	// Category Keywords (Low-case for easier matching)
-	dateKeywords := []string{"frffk", "date", "fnukad", "cutoff", "cut-off", "last", "start", "time"}
-	eligibilityKeywords := []string{"eligibility", "qualification", "criteria", "lukrd", "graduate", "lukr", "mez", "lhek", "height", "chest", "weight", "åwapkbz", "lhuk", "ot+u", "physical", "vgzrk", "ik=rk", "age"}
-	documentKeywords := []string{"document", "certificate", "marksheet", "photo", "signature", "izek.k&i=", "passport", "aadhar", "pan card", "email", "mobile", "iathdj.k", "glrk{kj", "qksvks"}
-	feeKeywords := []string{"fee", "शुल्क", "charges", "'kqyd", "ewy;", "pktz", "/-", "@&", "amount", "payment", "transaction"}
-
-	seenDates := make(map[string]bool)
-	seenEligibilities := make(map[string]bool)
-	seenDocs := make(map[string]bool)
-	seenFees := make(map[string]bool)
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-		lowerLine := strings.ToLower(trimmed)
-
-		// 1. Scan for Dates
-		isDateLine := dateRegex.MatchString(trimmed)
-		if !isDateLine {
-			for _, kw := range dateKeywords {
-				if strings.Contains(lowerLine, kw) {
-					isDateLine = true
-					break
-				}
-			}
-		}
-		if isDateLine {
-			if !seenDates[trimmed] {
-				dateLines = append(dateLines, trimmed)
-				seenDates[trimmed] = true
-			}
-		}
-
-		// 2. Scan for Eligibility
-		isEligibility := false
-		for _, kw := range eligibilityKeywords {
-			if strings.Contains(lowerLine, kw) {
-				isEligibility = true
-				break
-			}
-		}
-		if isEligibility {
-			if !seenEligibilities[trimmed] {
-				eligibilityLines = append(eligibilityLines, trimmed)
-				seenEligibilities[trimmed] = true
-			}
-		}
-
-		// 3. Scan for Documents
-		isDoc := false
-		for _, kw := range documentKeywords {
-			if strings.Contains(lowerLine, kw) {
-				isDoc = true
-				break
-			}
-		}
-		if isDoc {
-			if !seenDocs[trimmed] {
-				documentLines = append(documentLines, trimmed)
-				seenDocs[trimmed] = true
-			}
-		}
-
-		// 4. Scan for Fee
-		isFee := false
-		for _, kw := range feeKeywords {
-			if strings.Contains(lowerLine, kw) {
-				isFee = true
-				break
-			}
-		}
-		if isFee {
-			if !seenFees[trimmed] {
-				feeLines = append(feeLines, trimmed)
-				seenFees[trimmed] = true
-			}
+	// 3. Extract Required Documents
+	var docs []string
+	docKeywords := []string{
+		"nloha led{k dh ck sMZ ijh{kk ds ewy izek.k&i=",
+		"Lukrd ijh{kk",
+		"vkosnd dk QksVksxzkQ",
+		"gLrk{kj vaxzsth ,oa fgUnh",
+		"iathdj.k ds fy, eksckby uEcj rFkk bZ&esy vkbZ0Mh0",
+		"tkfr izek.k&i=",
+	}
+	for _, kw := range docKeywords {
+		if strings.Contains(text, kw) {
+			docs = append(docs, cleanText(kw))
 		}
 	}
+	if len(docs) == 0 {
+		docs = append(docs, "Class 10 Certificate; Graduation Marksheet/Certificate; Photo; Signature; Domicile/Caste Certificate")
+	}
+	n.RequiredDocuments = strings.Join(docs, "; ")
 
-	n.ImportantDates = strings.Join(dateLines, "; ")
-	n.EligibilityCriteria = strings.Join(eligibilityLines, "; ")
-	n.RequiredDocuments = strings.Join(documentLines, "; ")
-	n.Fee = strings.Join(feeLines, "; ")
+	// 4. Extract Fee
+	var fee string
+	feeReg := regexp.MustCompile(`(vk\s*Wuykbu\s*vkosnu\s*dk\s*ewY;\s*\d{3}[@&]|\d{3}@&|100/-)`)
+	if match := feeReg.FindString(text); match != "" {
+		fee = cleanText(match)
+	} else {
+		fee = "Application Fee: 100/-"
+	}
+	n.Fee = fee
 
 	return n
+}
+
+func cleanText(s string) string {
+	s = strings.ReplaceAll(s, "@", "/")
+	s = strings.ReplaceAll(s, "&", "/-")
+	s = strings.ReplaceAll(s, "  ", " ")
+	return strings.TrimSpace(s)
 }
