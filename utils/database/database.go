@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/examsync/pdf-parser/internal/models"
 	"github.com/examsync/pdf-parser/utils/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,6 +28,10 @@ func ConnectDB(cfg *config.DatabaseConfig) (*gorm.DB, error) {
 
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	if err := db.AutoMigrate(&models.ExamNotification{}); err != nil {
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	return db, nil

@@ -8,6 +8,7 @@ A structured, modular Go web microservice following Clean and Layered Architectu
 
 - **Web Framework**: [Echo v5 (v5.2.1)](https://github.com/labstack/echo) — Lightweight, fast Go web framework for HTTP routing and context handling.
 - **ORM / Database Client**: [GORM (v1.31.2)](https://gorm.io/) with [PostgreSQL Driver (v1.6.0)](https://github.com/go-gorm/postgres) — Object Relational Mapper for PostgreSQL schema auto-migrations and persistence.
+- **PDF Extraction**: [dslipak/pdf (v0.0.2)](https://github.com/dslipak/pdf) — Go PDF reader package for extracting plain text content from documents.
 - **Configuration Management**: [Viper (v1.21.0)](https://github.com/spf13/viper) — Environment-aware and flexible configuration management.
 - **Structured Logging**: [Logrus (v1.9.4)](https://github.com/sirupsen/logrus) — High-performance JSON-formatted structured logging.
 
@@ -33,7 +34,8 @@ A structured, modular Go web microservice following Clean and Layered Architectu
 │   ├── common/                     # Shared cross-cutting utility functions
 │   ├── config/                     # Configuration structure parser and validation logic
 │   ├── database/                   # GORM connection setup, ping validation, and close wrappers
-│   └── logger/                     # Logrus JSON logger wrappers and initialization
+│   ├── logger/                     # Logrus JSON logger wrappers and initialization
+│   └── pdf/                        # PDF text extraction utilities using dslipak/pdf
 ├── go.mod                          # Go modules dependency descriptor
 └── go.sum                          # Go modules checksum validation
 ```
@@ -56,6 +58,7 @@ Detailed file mapping:
   - [utils/config/config.go](file:///Users/sharma/go/src/github.com/examsync/pdf-parser/utils/config/config.go)
   - [utils/database/database.go](file:///Users/sharma/go/src/github.com/examsync/pdf-parser/utils/database/database.go)
   - [utils/logger/logger.go](file:///Users/sharma/go/src/github.com/examsync/pdf-parser/utils/logger/logger.go)
+  - [utils/pdf/parser.go](file:///Users/sharma/go/src/github.com/examsync/pdf-parser/utils/pdf/parser.go)
 
 ---
 
@@ -63,15 +66,27 @@ Detailed file mapping:
 
 The service enforces a clean separation of concerns and uses a **concrete dependency injection pattern**:
 
+```mermaid
+graph TD
+    Client["Client (HTTP Multipart Request)"] -->|POST /parse| Router["Echo HTTP Router (cmd/server/handler.go)"]
+    Router --> Controller["ExamNotificationController (internal/controllers/controller.go)"]
+    Controller --> Service["ExamNotificationService (internal/services/services.go)"]
+    Service --> PDFParser["PDF Parser (utils/pdf/parser.go)"]
+    Service --> Repo["ExamNotificationRepository (internal/repositories/repo.go)"]
+    Repo --> DB[("PostgreSQL Database (GORM)")]
+```
+
 1. **Presentation Layer (`internal/controllers/` / `cmd/server/handler.go`)**:
    - Decoupled Echo controllers processing HTTP inputs, binding request variables, and calling services.
 2. **DTO Layer (`internal/DTOS/`)**:
-   - Serialization templates that define payloads for request/response bodies.
+   - Data Transfer Objects that define JSON payloads for request/response serialization.
 3. **Domain Layer (`internal/models/`)**:
-   - Domain structures representing core entities mapped to database schemas (e.g. `ParsedPDF` database entity).
+   - Business entities mapped to database schemas (e.g. `ExamNotification` database entity).
 4. **Service Layer (`internal/services/`)**:
-   - Implements core business logic workflows and coordination rules.
-5. **Infrastructure & Storage (`internal/repositories/` / `utils/database/`)**:
+   - Implements core business logic workflows, orchestrates PDF text extraction, and calls repositories.
+5. **PDF Parser Utility (`utils/pdf/`)**:
+   - Handles text extraction from uploaded PDF binary data using `github.com/dslipak/pdf`.
+6. **Infrastructure & Storage (`internal/repositories/` / `utils/database/`)**:
    - Database connection management, auto-migrations, and data access query execution.
 
 ---
@@ -80,9 +95,9 @@ The service enforces a clean separation of concerns and uses a **concrete depend
 
 Once the application is running, the following endpoints are available:
 
-* **Get All Parsed PDFs (`GET /pdfs`)**:
-  - Fetches the collection of parsed PDFs from the PostgreSQL database.
-  - Automatically runs GORM auto-migrations and seeds a default baseline record (`gobyexample.pdf`) if the table is empty.
+* **Parse Exam Notification PDF (`POST /parse`)**:
+  - Accepts a PDF file upload under the multipart form field name `file`.
+  - Dynamically extracts plain text, parses details (dates, eligibility criteria, required documents, fees) using heuristics, saves it into the database, and returns the parsed GORM entity JSON payload.
 * **Health Check (`GET /health`)**:
   - Returns `{"status": "healthy"}` for container/service health diagnostics.
 
@@ -111,7 +126,7 @@ Once the application is running, the following endpoints are available:
      port: 5432
      user: postgres
      password: postgres
-     dbname: pdf_parser
+     dbname: examsync
      sslmode: disable
    ```
 

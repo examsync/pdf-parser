@@ -1,29 +1,46 @@
 package controllers
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/examsync/pdf-parser/internal/services"
+	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/labstack/echo/v5"
 )
 
-// ParsedPDFController handles HTTP requests for parsed PDFs.
-type ParsedPDFController struct {
-	service *services.ParsedPDFService
+// ExamNotificationController handles HTTP requests for exam notifications.
+type ExamNotificationController struct {
+	service *services.ExamNotificationService
 }
 
-// NewParsedPDFController creates a new instance of ParsedPDFController.
-func NewParsedPDFController(service *services.ParsedPDFService) *ParsedPDFController {
-	return &ParsedPDFController{service: service}
+// NewExamNotificationController creates a new instance of ExamNotificationController.
+func NewExamNotificationController(service *services.ExamNotificationService) *ExamNotificationController {
+	return &ExamNotificationController{service: service}
 }
 
-// GetPDFs handles the HTTP request to get all parsed PDFs.
-func (c *ParsedPDFController) GetPDFs(ctx *echo.Context) error {
-	pdfs, err := c.service.GetPDFs()
+// Parse handles the HTTP multipart form request containing a PDF file to extract and store notification details.
+func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
+	file, err := ctx.FormFile("file")
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": err.Error(),
-		})
+		return errors.NewBadRequest("Missing 'file' field in multipart form", err)
 	}
-	return ctx.JSON(http.StatusOK, pdfs)
+
+	src, err := file.Open()
+	if err != nil {
+		return errors.NewInternal("Failed to open the uploaded file", err)
+	}
+	defer src.Close()
+
+	fileBytes, err := io.ReadAll(src)
+	if err != nil {
+		return errors.NewInternal("Failed to read the uploaded file bytes", err)
+	}
+
+	notification, err := c.service.ParsePDF(file.Filename, fileBytes)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusCreated, notification)
 }

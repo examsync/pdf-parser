@@ -34,11 +34,11 @@ func main() {
 	}()
 
 	// 4. Start HTTP Web Server
-	startServer(cfg.Server.Port, db)
+	startServer(cfg, db)
 }
 
 // initDatabase connects to the database via GORM and fails fast if the connection is invalid
-	func initDatabase(cfg *config.DatabaseConfig) *gorm.DB {
+func initDatabase(cfg *config.DatabaseConfig) *gorm.DB {
 	logger.Log.Info("Connecting to PostgreSQL database via GORM...")
 	db, err := database.ConnectDB(cfg)
 	if err != nil {
@@ -50,11 +50,14 @@ func main() {
 // PrintConfiguration outputs loaded Viper settings using Logrus
 func PrintConfiguration(cfg *config.Config) {
 	logger.Log.WithFields(logrus.Fields{
-		"server.port":      cfg.Server.Port,
-		"database.host":    cfg.Database.Host,
-		"database.port":    cfg.Database.Port,
-		"database.user":    cfg.Database.User,
-		"database.dbname":  cfg.Database.DBName,
-		"database.sslmode": cfg.Database.SSLMode,
+		"server.port":                  cfg.Server.Port,
+		"database.host":                cfg.Database.Host,
+		"database.port":                cfg.Database.Port,
+		"database.user":                cfg.Database.User,
+		"database.dbname":              cfg.Database.DBName,
+		"database.sslmode":             cfg.Database.SSLMode,
+		"errors.expose_internal_details": cfg.Error.ExposeInternalDetails,
+		"errors.log_stack_trace":       cfg.Error.LogStackTrace,
+		"errors.default_message":        cfg.Error.DefaultMessage,
 	}).Info("Viper configuration loaded successfully")
 }

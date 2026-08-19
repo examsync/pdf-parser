@@ -8,3 +8,8 @@ database:
   password: postgres
   dbname: examsync
   sslmode: disable
+
+errors:
+  expose_internal_details: true
+  log_stack_trace: true
+  default_message: "An unexpected internal server error occurred"

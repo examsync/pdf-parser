@@ -9,20 +9,25 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/examsync/pdf-parser/utils/config"
+	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/examsync/pdf-parser/utils/logger"
 	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
 )
 
-// startServer sets up the Echo router, configures server parameters, and handles graceful shutdown
-func startServer(port int, db *gorm.DB) {
+// startServer sets up the Echo router, configures server parameters and custom error handling, and handles graceful shutdown
+func startServer(cfg *config.Config, db *gorm.DB) {
 	e := echo.New()
+
+	// Configure Centralized Smart Error Handler
+	e.HTTPErrorHandler = errors.NewHTTPErrorHandler(cfg.Error)
 
 	// Register Routes and Handlers
 	registerHandlers(e, db)
 
 	// Start standard net/http Server using Echo as handler
-	addr := fmt.Sprintf(":%d", port)
+	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      e,
