@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/examsync/pdf-parser/internal/models"
 	"github.com/examsync/pdf-parser/internal/repositories"
+	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/examsync/pdf-parser/utils/pdf"
 )
 
@@ -18,15 +19,21 @@ func NewExamNotificationService(repo *repositories.ExamNotificationRepository) *
 
 // ParsePDF parses notification data from raw PDF bytes, saves it to the database, and returns it.
 func (s *ExamNotificationService) ParsePDF(fileName string, fileBytes []byte) (*models.ExamNotification, error) {
+	if len(fileBytes) == 0 {
+		return nil, errors.NewBadRequest("Uploaded file is empty", nil)
+	}
+
 	text, err := pdf.ExtractText(fileBytes)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewUnprocessableEntity("Failed to extract text from PDF document", err)
 	}
 
 	notification := pdf.ParseNotification(fileName, text)
 
-	if err := s.repo.Create(notification); err != nil {
-		return nil, err
+	if s.repo != nil {
+		if err := s.repo.Create(notification); err != nil {
+			return nil, errors.NewInternal("Failed to save notification to database", err)
+		}
 	}
 
 	return notification, nil

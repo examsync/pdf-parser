@@ -17,9 +17,16 @@ type ServerConfig struct {
 	Port int `mapstructure:"port"`
 }
 
+type ErrorConfig struct {
+	ExposeInternalDetails bool   `mapstructure:"expose_internal_details"`
+	LogStackTrace         bool   `mapstructure:"log_stack_trace"`
+	DefaultMessage        string `mapstructure:"default_message"`
+}
+
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Database DatabaseConfig `mapstructure:"database"`
+	Error    ErrorConfig    `mapstructure:"errors"`
 }
 
 // LoadConfig reads configuration from file or environment variables.

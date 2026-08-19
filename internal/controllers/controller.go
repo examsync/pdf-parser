@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/examsync/pdf-parser/internal/services"
+	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/labstack/echo/v5"
 )
 
@@ -22,31 +23,23 @@ func NewExamNotificationController(service *services.ExamNotificationService) *E
 func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]string{
-			"error": "Missing 'file' field in multipart form",
-		})
+		return errors.NewBadRequest("Missing 'file' field in multipart form", err)
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to open the uploaded file: " + err.Error(),
-		})
+		return errors.NewInternal("Failed to open the uploaded file", err)
 	}
 	defer src.Close()
 
 	fileBytes, err := io.ReadAll(src)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to read the uploaded file bytes: " + err.Error(),
-		})
+		return errors.NewInternal("Failed to read the uploaded file bytes", err)
 	}
 
 	notification, err := c.service.ParsePDF(file.Filename, fileBytes)
 	if err != nil {
-		return ctx.JSON(http.StatusInternalServerError, map[string]string{
-			"error": "Failed to parse PDF: " + err.Error(),
-		})
+		return err
 	}
 
 	return ctx.JSON(http.StatusCreated, notification)
