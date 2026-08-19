@@ -28,7 +28,12 @@ func (s *ExamNotificationService) ParsePDF(fileName string, fileBytes []byte) (*
 		return nil, errors.NewUnprocessableEntity("Failed to extract text from PDF document", err)
 	}
 
-	notification := pdf.ParseNotification(fileName, text)
+	lang, err := pdf.DetectLanguage(text)
+	if err != nil {
+		return nil, errors.NewAppError(errors.ErrCodeUnsupportedLanguage, "Unsupported document language. Only English and Hindi PDFs are supported", 422, err)
+	}
+
+	notification := pdf.ParseNotification(fileName, text, lang)
 
 	if s.repo != nil {
 		if err := s.repo.Create(notification); err != nil {

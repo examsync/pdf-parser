@@ -14,6 +14,7 @@ const (
 	ErrCodeValidationError     = "ERR_VALIDATION_ERROR"
 	ErrCodeUnauthorized        = "ERR_UNAUTHORIZED"
 	ErrCodeForbidden           = "ERR_FORBIDDEN"
+	ErrCodeUnsupportedLanguage = "ERR_UNSUPPORTED_LANGUAGE"
 )
 
 // AppError defines a structured application error with HTTP metadata.

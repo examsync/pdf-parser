@@ -32,11 +32,12 @@ func ExtractText(fileBytes []byte) (string, error) {
 	return textBuilder.String(), nil
 }
 
-// ParseNotification maps extracted text to the ExamNotification model.
-func ParseNotification(fileName string, text string) *models.ExamNotification {
+// ParseNotification maps extracted text and detected language to the ExamNotification model.
+func ParseNotification(fileName string, text string, language string) *models.ExamNotification {
 	return &models.ExamNotification{
 		FileName: fileName,
 		RawText:  text,
+		Language: language,
 	}
 }
 
