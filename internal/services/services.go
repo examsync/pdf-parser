@@ -1,6 +1,9 @@
 package services
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/examsync/pdf-parser/internal/models"
 	"github.com/examsync/pdf-parser/internal/repositories"
 	"github.com/examsync/pdf-parser/utils/errors"
@@ -43,3 +46,34 @@ func (s *ExamNotificationService) ParsePDF(fileName string, fileBytes []byte) (*
 
 	return notification, nil
 }
+
+// GetByFileName retrieves an existing notification record by file name from the repository,
+// or attempts to locate and parse a PDF file with that name from local storage.
+func (s *ExamNotificationService) GetByFileName(fileName string) (*models.ExamNotification, error) {
+	if fileName == "" {
+		return nil, errors.NewBadRequest("File name parameter cannot be empty", nil)
+	}
+
+	if s.repo != nil {
+		notification, err := s.repo.GetByFileName(fileName)
+		if err == nil && notification != nil {
+			return notification, nil
+		}
+	}
+
+	// Fallback: check if physical PDF file exists in workspace or uploads folder
+	searchPaths := []string{
+		fileName,
+		filepath.Join("uploads", fileName),
+	}
+
+	for _, path := range searchPaths {
+		fileBytes, err := os.ReadFile(path)
+		if err == nil && len(fileBytes) > 0 {
+			return s.ParsePDF(fileName, fileBytes)
+		}
+	}
+
+	return nil, errors.NewNotFound("PDF file or notification record not found for file name: "+fileName, nil)
+}
+

@@ -19,9 +19,11 @@ func registerHandlers(e *echo.Echo, db *gorm.DB) {
 
 	// Register Routes
 	e.POST("/parse", controller.Parse)
+	e.GET("/notifications/:filename", controller.GetByFileName)
 	e.GET("/health", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{
 			"status": "healthy",
 		})
 	})
+
 }
