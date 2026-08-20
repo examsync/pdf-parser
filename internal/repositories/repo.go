@@ -29,3 +29,14 @@ func (r *ExamNotificationRepository) GetAll() ([]models.ExamNotification, error)
 
 	return notifications, nil
 }
+
+// GetByFileName retrieves an ExamNotification record matching the given file name.
+func (r *ExamNotificationRepository) GetByFileName(fileName string) (*models.ExamNotification, error) {
+	var notification models.ExamNotification
+	if err := r.db.Where("file_name = ?", fileName).First(&notification).Error; err != nil {
+		return nil, err
+	}
+
+	return &notification, nil
+}
+

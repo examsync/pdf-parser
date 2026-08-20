@@ -44,3 +44,23 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 
 	return ctx.JSON(http.StatusCreated, notification)
 }
+
+// GetByFileName handles HTTP GET requests to read/retrieve a PDF notification by file name.
+func (c *ExamNotificationController) GetByFileName(ctx *echo.Context) error {
+	fileName := ctx.Param("filename")
+	if fileName == "" {
+		fileName = ctx.QueryParam("filename")
+	}
+
+	if fileName == "" {
+		return errors.NewBadRequest("Missing required 'filename' parameter", nil)
+	}
+
+	notification, err := c.service.GetByFileName(fileName)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, notification)
+}
+
