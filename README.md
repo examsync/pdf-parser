@@ -6,7 +6,7 @@ A structured, modular Go web microservice following Clean and Layered Architectu
 
 ## 🚀 Core Technologies & Dependencies
 
-- **Web Framework**: [Echo v5 (v5.2.1)](https://github.com/labstack/echo) — Lightweight, fast Go web framework for HTTP routing and context handling.
+- **Web Framework**: [Gin Gonic (v1.12.0)](https://github.com/gin-gonic/gin) — High-performance HTTP web framework for Go routing and middleware.
 - **ORM / Database Client**: [GORM (v1.31.2)](https://gorm.io/) with [PostgreSQL Driver (v1.6.0)](https://github.com/go-gorm/postgres) — Object Relational Mapper for PostgreSQL schema auto-migrations and persistence.
 - **PDF Extraction**: [dslipak/pdf (v0.0.2)](https://github.com/dslipak/pdf) — Go PDF reader package for extracting plain text content from documents.
 - **Configuration Management**: [Viper (v1.21.0)](https://github.com/spf13/viper) — Environment-aware and flexible configuration management.
@@ -19,7 +19,7 @@ A structured, modular Go web microservice following Clean and Layered Architectu
 ```text
 ├── cmd/
 │   └── server/
-│       ├── handler.go              # MVC dependency wiring and Echo HTTP routing setup
+│       ├── handler.go              # MVC dependency wiring and Gin HTTP routing setup
 │       ├── main.go                 # App entry point, logger boot, config, and database init
 │       └── server.go               # net/http server configuration and graceful shutdown
 ├── config/
@@ -68,7 +68,7 @@ The service enforces a clean separation of concerns and uses a **concrete depend
 
 ```mermaid
 graph TD
-    Client["Client (HTTP Multipart Request)"] -->|POST /parse| Router["Echo HTTP Router (cmd/server/handler.go)"]
+    Client["Client (HTTP Multipart Request)"] -->|POST /parse| Router["Gin HTTP Router (cmd/server/handler.go)"]
     Router --> Controller["ExamNotificationController (internal/controllers/controller.go)"]
     Controller --> Service["ExamNotificationService (internal/services/services.go)"]
     Service --> PDFParser["PDF Parser (utils/pdf/parser.go)"]
@@ -77,7 +77,8 @@ graph TD
 ```
 
 1. **Presentation Layer (`internal/controllers/` / `cmd/server/handler.go`)**:
-   - Decoupled Echo controllers processing HTTP inputs, binding request variables, and calling services.
+   - Decoupled Gin controllers processing HTTP inputs, binding request variables, and calling services.
+
 2. **DTO Layer (`internal/DTOS/`)**:
    - Data Transfer Objects that define JSON payloads for request/response serialization.
 3. **Domain Layer (`internal/models/`)**:

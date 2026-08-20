@@ -6,19 +6,24 @@ import (
 	"testing"
 
 	"github.com/examsync/pdf-parser/internal/services"
-	"github.com/labstack/echo/v5"
+	"github.com/examsync/pdf-parser/utils/config"
+	"github.com/examsync/pdf-parser/utils/errors"
+	"github.com/gin-gonic/gin"
 )
 
 func TestExamNotificationController_GetByFileName_NotFound(t *testing.T) {
-	e := echo.New()
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(errors.ErrorHandlerMiddleware(config.ErrorConfig{}))
+
 	service := services.NewExamNotificationService(nil)
 	controller := NewExamNotificationController(service)
 
-	e.GET("/pdf/:filename", controller.GetByFileName)
+	r.GET("/notifications/:filename", controller.GetByFileName)
 
-	req := httptest.NewRequest(http.MethodGet, "/pdf/non_existent.pdf", nil)
+	req := httptest.NewRequest(http.MethodGet, "/notifications/non_existent.pdf", nil)
 	rec := httptest.NewRecorder()
-	e.ServeHTTP(rec, req)
+	r.ServeHTTP(rec, req)
 
 	if rec.Code == http.StatusOK {
 		t.Fatalf("Expected non-200 status code for missing PDF file, got %d", rec.Code)
@@ -26,15 +31,18 @@ func TestExamNotificationController_GetByFileName_NotFound(t *testing.T) {
 }
 
 func TestExamNotificationController_GetByFileName_MissingParam(t *testing.T) {
-	e := echo.New()
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(errors.ErrorHandlerMiddleware(config.ErrorConfig{}))
+
 	service := services.NewExamNotificationService(nil)
 	controller := NewExamNotificationController(service)
 
-	e.GET("/pdf", controller.GetByFileName)
+	r.GET("/notifications", controller.GetByFileName)
 
-	req := httptest.NewRequest(http.MethodGet, "/pdf", nil)
+	req := httptest.NewRequest(http.MethodGet, "/notifications", nil)
 	rec := httptest.NewRecorder()
-	e.ServeHTTP(rec, req)
+	r.ServeHTTP(rec, req)
 
 	if rec.Code == http.StatusOK {
 		t.Fatalf("Expected non-200 status code when filename parameter is missing, got %d", rec.Code)

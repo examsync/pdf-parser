@@ -6,13 +6,14 @@ Comprehensive API reference and architecture documentation for frontend engineer
 
 ## 🏛️ System Architecture Overview
 
-The **PDF Parser Service** is a high-performance Go microservice built on Echo v5 and GORM. It extracts plain text from official exam notification PDF documents, auto-detects document language (English / Hindi), and persists parsed records to PostgreSQL.
+The **PDF Parser Service** is a high-performance Go microservice built on Gin Gonic and GORM. It extracts plain text from official exam notification PDF documents, auto-detects document language (English / Hindi), and persists parsed records to PostgreSQL.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Frontend as Frontend Client / AI UI
-    participant API as Echo HTTP Router (/cmd/server)
+    participant API as Gin HTTP Router (/cmd/server)
+
     participant Ctrl as Controller Layer (internal/controllers)
     participant Svc as Service Layer (internal/services)
     participant PDF as PDF Parser Utility (utils/pdf)

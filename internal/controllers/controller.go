@@ -7,11 +7,11 @@ import (
 	"github.com/examsync/pdf-parser/internal/services"
 	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/examsync/pdf-parser/utils/logger"
-	"github.com/labstack/echo/v5"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-// ExamNotificationController handles HTTP requests for exam notifications.
+// ExamNotificationController handles HTTP requests for exam notifications using Gin Gonic.
 type ExamNotificationController struct {
 	service *services.ExamNotificationService
 }
@@ -22,7 +22,7 @@ func NewExamNotificationController(service *services.ExamNotificationService) *E
 }
 
 // Parse handles the HTTP multipart form request containing a PDF file to extract and store notification details.
-func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
+func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		if logger.Log != nil {
@@ -32,7 +32,8 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 				"error":   err.Error(),
 			}).Warn("Failed to extract multipart form file from request")
 		}
-		return errors.NewBadRequest("Missing 'file' field in multipart form", err)
+		_ = ctx.Error(errors.NewBadRequest("Missing 'file' field in multipart form", err))
+		return
 	}
 
 	if logger.Log != nil {
@@ -52,7 +53,8 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 				"error":    err.Error(),
 			}).Error("Failed to open uploaded file stream")
 		}
-		return errors.NewInternal("Failed to open the uploaded file", err)
+		_ = ctx.Error(errors.NewInternal("Failed to open the uploaded file", err))
+		return
 	}
 	defer src.Close()
 
@@ -65,12 +67,14 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 				"error":    err.Error(),
 			}).Error("Failed to read uploaded file bytes")
 		}
-		return errors.NewInternal("Failed to read the uploaded file bytes", err)
+		_ = ctx.Error(errors.NewInternal("Failed to read the uploaded file bytes", err))
+		return
 	}
 
 	notification, err := c.service.ParsePDF(file.Filename, fileBytes)
 	if err != nil {
-		return err
+		_ = ctx.Error(err)
+		return
 	}
 
 	if logger.Log != nil {
@@ -83,14 +87,14 @@ func (c *ExamNotificationController) Parse(ctx *echo.Context) error {
 		}).Info("Successfully parsed and processed PDF notification")
 	}
 
-	return ctx.JSON(http.StatusCreated, notification)
+	ctx.JSON(http.StatusCreated, notification)
 }
 
 // GetByFileName handles HTTP GET requests to read/retrieve a PDF notification by file name.
-func (c *ExamNotificationController) GetByFileName(ctx *echo.Context) error {
+func (c *ExamNotificationController) GetByFileName(ctx *gin.Context) {
 	fileName := ctx.Param("filename")
 	if fileName == "" {
-		fileName = ctx.QueryParam("filename")
+		fileName = ctx.Query("filename")
 	}
 
 	if logger.Log != nil {
@@ -107,7 +111,8 @@ func (c *ExamNotificationController) GetByFileName(ctx *echo.Context) error {
 				"status":  http.StatusBadRequest,
 			}).Warn("Missing required filename parameter in request")
 		}
-		return errors.NewBadRequest("Missing required 'filename' parameter", nil)
+		_ = ctx.Error(errors.NewBadRequest("Missing required 'filename' parameter", nil))
+		return
 	}
 
 	notification, err := c.service.GetByFileName(fileName)
@@ -119,7 +124,8 @@ func (c *ExamNotificationController) GetByFileName(ctx *echo.Context) error {
 				"error":    err.Error(),
 			}).Warn("Failed to retrieve PDF notification by file name")
 		}
-		return err
+		_ = ctx.Error(err)
+		return
 	}
 
 	if logger.Log != nil {
@@ -131,5 +137,5 @@ func (c *ExamNotificationController) GetByFileName(ctx *echo.Context) error {
 		}).Info("Successfully retrieved PDF notification by file name")
 	}
 
-	return ctx.JSON(http.StatusOK, notification)
+	ctx.JSON(http.StatusOK, notification)
 }

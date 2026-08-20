@@ -12,30 +12,32 @@ import (
 	"github.com/examsync/pdf-parser/utils/config"
 	"github.com/examsync/pdf-parser/utils/errors"
 	"github.com/examsync/pdf-parser/utils/logger"
-	"github.com/labstack/echo/v5"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-// startServer sets up the Echo router, configures server parameters and custom error handling, and handles graceful shutdown
+// startServer sets up the Gin router engine, configures middleware and graceful shutdown
 func startServer(cfg *config.Config, db *gorm.DB) {
-	e := echo.New()
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
 
-	// Configure Centralized Smart Error Handler
-	e.HTTPErrorHandler = errors.NewHTTPErrorHandler(cfg.Error)
+	// Attach Recovery and Error Handling Middleware
+	r.Use(gin.Recovery())
+	r.Use(errors.ErrorHandlerMiddleware(cfg.Error))
 
 	// Register Routes and Handlers
-	registerHandlers(e, db)
+	registerHandlers(r, db)
 
-	// Start standard net/http Server using Echo as handler
+	// Start standard net/http Server using Gin as handler
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      e,
+		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	logger.Log.Infof("HTTP Server starting on address %s", addr)
+	logger.Log.Infof("Gin HTTP Server starting on address %s", addr)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
