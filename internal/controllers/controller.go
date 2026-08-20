@@ -30,7 +30,7 @@ func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 				"handler": "Parse",
 				"status":  http.StatusBadRequest,
 				"error":   err.Error(),
-			}).Warn("Failed to extract multipart form file from request")
+			}).Warn("--- [HANDLER: Parse] Failed to extract multipart form file from request ---")
 		}
 		_ = ctx.Error(errors.NewBadRequest("Missing 'file' field in multipart form", err))
 		return
@@ -41,7 +41,7 @@ func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 			"handler":  "Parse",
 			"filename": file.Filename,
 			"size":     file.Size,
-		}).Info("Receiving PDF file upload request for parsing")
+		}).Info("--- [HANDLER: Parse] Receiving PDF file upload request for parsing ---")
 	}
 
 	src, err := file.Open()
@@ -51,7 +51,7 @@ func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 				"handler":  "Parse",
 				"filename": file.Filename,
 				"error":    err.Error(),
-			}).Error("Failed to open uploaded file stream")
+			}).Error("--- [HANDLER: Parse] Failed to open uploaded file stream ---")
 		}
 		_ = ctx.Error(errors.NewInternal("Failed to open the uploaded file", err))
 		return
@@ -65,7 +65,7 @@ func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 				"handler":  "Parse",
 				"filename": file.Filename,
 				"error":    err.Error(),
-			}).Error("Failed to read uploaded file bytes")
+			}).Error("--- [HANDLER: Parse] Failed to read uploaded file bytes ---")
 		}
 		_ = ctx.Error(errors.NewInternal("Failed to read the uploaded file bytes", err))
 		return
@@ -84,7 +84,7 @@ func (c *ExamNotificationController) Parse(ctx *gin.Context) {
 			"filename":        notification.FileName,
 			"language":        notification.Language,
 			"text_length":     len(notification.RawText),
-		}).Info("Successfully parsed and processed PDF notification")
+		}).Info("---- [HANDLER: Parse] Successfully parsed and processed PDF notification ----")
 	}
 
 	ctx.JSON(http.StatusCreated, notification)
@@ -101,7 +101,7 @@ func (c *ExamNotificationController) GetByFileName(ctx *gin.Context) {
 		logger.Log.WithFields(logrus.Fields{
 			"handler":  "GetByFileName",
 			"filename": fileName,
-		}).Info("Receiving HTTP GET request to read notification by file name")
+		}).Info("--- [HANDLER: GetByFileName] Receiving request to read notification by file name ---")
 	}
 
 	if fileName == "" {
@@ -109,7 +109,7 @@ func (c *ExamNotificationController) GetByFileName(ctx *gin.Context) {
 			logger.Log.WithFields(logrus.Fields{
 				"handler": "GetByFileName",
 				"status":  http.StatusBadRequest,
-			}).Warn("Missing required filename parameter in request")
+			}).Warn("--- [HANDLER: GetByFileName] Missing required filename parameter in request ---")
 		}
 		_ = ctx.Error(errors.NewBadRequest("Missing required 'filename' parameter", nil))
 		return
@@ -122,7 +122,7 @@ func (c *ExamNotificationController) GetByFileName(ctx *gin.Context) {
 				"handler":  "GetByFileName",
 				"filename": fileName,
 				"error":    err.Error(),
-			}).Warn("Failed to retrieve PDF notification by file name")
+			}).Warn("---- [HANDLER: GetByFileName] Failed to retrieve PDF notification ----")
 		}
 		_ = ctx.Error(err)
 		return
@@ -134,7 +134,7 @@ func (c *ExamNotificationController) GetByFileName(ctx *gin.Context) {
 			"notification_id": notification.ID,
 			"filename":        notification.FileName,
 			"language":        notification.Language,
-		}).Info("Successfully retrieved PDF notification by file name")
+		}).Info("---- [HANDLER: GetByFileName] Successfully retrieved PDF notification ----")
 	}
 
 	ctx.JSON(http.StatusOK, notification)

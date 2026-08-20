@@ -21,9 +21,11 @@ func startServer(cfg *config.Config, db *gorm.DB) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
-	// Attach Recovery and Error Handling Middleware
+	// Attach Recovery, Request Delimiter Logging, and Error Handling Middleware
 	r.Use(gin.Recovery())
+	r.Use(logger.RequestLoggerMiddleware())
 	r.Use(errors.ErrorHandlerMiddleware(cfg.Error))
+
 
 	// Register Routes and Handlers
 	registerHandlers(r, db)
